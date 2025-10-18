@@ -1,0 +1,972 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Fonts */
+@font-face {
+  font-family: 'Grand Cru';
+  src: url('/fenotype-grand-cru-light-s.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/Montserrat-Light.ttf') format('truetype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Force dark defaults to make.with-section-atmosphere .aurora-field {
+  position:absolute; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(circle at 18% 30%, rgba(109,40,217,0.35), rgba(0,0,0,0) 55%),
+    radial-gradient(circle at 78% 55%, rgba(59,130,246,0.30), rgba(0,0,0,0) 60%),
+    radial-gradient(circle at 42% 82%, rgba(168,85,247,0.38), rgba(0,0,0,0) 65%),
+    radial-gradient(circle at 25% 95%, rgba(147,51,234,0.32), rgba(0,0,0,0) 60%),
+    radial-gradient(circle at 75% 92%, rgba(59,130,246,0.28), rgba(0,0,0,0) 58%);
+  filter: saturate(130%);
+  opacity:.35;
+}nd black and text white */
+    --background: 0 0% 0%; /* black */
+    --foreground: 0 0% 100%; /* white */
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+
+  --primary: 0 0% 9%;
+  --primary-foreground: 0 0% 98%;
+  --primary-hover: 0 0% 15%;
+
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 98%;
+    --secondary-hover: 0 0% 25%;
+
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    --accent: 0 0% 30%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 0 0% 9%;
+
+    --radius: 0.75rem;
+    
+    --gradient-cosmic: linear-gradient(135deg, hsl(0 0% 9%), hsl(0 0% 30%));
+    --gradient-hero: linear-gradient(180deg, hsl(0 0% 100% / 0.95), hsl(0 0% 100% / 0.85));
+    --shadow-soft: 0 2px 8px hsl(0 0% 9% / 0.08);
+    --shadow-elevated: 0 8px 24px hsl(0 0% 9% / 0.12);
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Popup sizing vars for gallery overlay */
+  /* Gallery popup sizing (slightly reduced) */
+  --popup-width-vw: 60vw;
+  --popup-max-width: 1100px;
+  --popup-max-height: 70vh;
+  }
+
+  /* Apply custom fonts */
+  body {
+    font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Grand Cru', ui-serif, Georgia, serif;
+  }
+
+  /* Bento grid layout (7 items) - 12 column system, compact layout */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-auto-rows: 7rem; /* much smaller for very compact layout */
+    gap: 10px;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .bento-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    transition: transform 240ms ease, box-shadow 240ms ease;
+    cursor: pointer;
+    background: #000;
+    height: 100%;
+    display: block;
+  }
+
+  .bento-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform-origin: center center;
+    transition: transform 240ms ease, box-shadow 240ms ease;
+  }
+
+  .bento-label { position: absolute; left: 18px; bottom: 18px; color: white; font-weight: 700; font-size: 1.125rem; text-shadow: 0 4px 14px rgba(0,0,0,0.6); }
+
+  /* Hover pop-up (thumbnail lift) */
+  .bento-item:hover { z-index: 30; transform: translateY(-10px) scale(1.02); }
+  .bento-item:hover .bento-img { transform: scale(1.04); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+
+  /* Active state when hovered via JS: expand more and keep elevated while cursor is over the tile */
+  .bento-item.active { z-index: 50; transform: translateY(-12px) scale(1.06); box-shadow: 0 40px 80px rgba(0,0,0,0.65); }
+  .bento-item.active .bento-img { transform: scale(1.08); }
+
+  /* Tile spans for 7-image bento layout (desktop) */
+  .tile-1 { grid-column: 1 / span 4; grid-row: 1 / span 2; }
+  .tile-2 { grid-column: 5 / span 4; grid-row: 1 / span 2; }
+  .tile-3 { grid-column: 9 / span 4; grid-row: 1 / span 1; }
+  .tile-4 { grid-column: 1 / span 3; grid-row: 3 / span 1; }
+  .tile-5 { grid-column: 4 / span 3; grid-row: 3 / span 1; }
+  .tile-6 { grid-column: 7 / span 3; grid-row: 3 / span 1; }
+  .tile-7 { grid-column: 10 / span 3; grid-row: 2 / span 2; }
+
+  /* Responsive adjustments */
+  @media (max-width: 1200px) {
+    .bento-grid { grid-template-columns: repeat(8, minmax(0,1fr)); grid-auto-rows: 6.5rem; gap: 8px; }
+    .tile-1 { grid-column: 1 / span 4; }
+    .tile-2 { grid-column: 5 / span 4; }
+    .tile-3 { grid-column: 1 / span 4; }
+    .tile-4, .tile-5, .tile-6, .tile-7 { grid-column: auto; }
+  }
+
+  @media (max-width: 768px) {
+    .bento-grid { grid-template-columns: repeat(2, minmax(0,1fr)); grid-auto-rows: 6rem; gap: 6px; }
+    .tile-1, .tile-2, .tile-3, .tile-4, .tile-5, .tile-6, .tile-7 { grid-column: auto; }
+  }
+
+  /* Fullscreen overlay preview shown when hovering/clicking a tile */
+  .bento-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+  }
+
+  .bento-overlay img {
+    max-width: 95vw;
+    max-height: 95vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.7);
+  }
+
+  /* Wrapper around fullscreen image so mouseleave fires as soon as cursor exits image bounds */
+  .overlay-content { display: inline-block; }
+
+  /* Enlarged popup adjustments */
+  @keyframes popupZoom { from { transform: scale(.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .bento-overlay { padding: 0; }
+  .bento-overlay .overlay-content {
+    width: min(var(--popup-width-vw), var(--popup-max-width));
+    max-height: var(--popup-max-height);
+    animation: popupZoom .28s cubic-bezier(.25,.8,.25,1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 50px 120px -20px rgba(0,0,0,0.7), 0 20px 40px rgba(0,0,0,0.5);
+    background: #000; /* helps if image aspect leaves bars */
+  }
+  .bento-overlay .overlay-content img {
+    width: 100%;
+    height: auto;
+    max-height: var(--popup-max-height);
+    object-fit: cover; /* fill nicely while respecting max-height */
+    display: block;
+  }
+
+}
+
+/* ================= Section Seam (Hero -> Features) ================= */
+
+/* ============== Icon Orbit Accent (space theme) ============== */
+@keyframes orbitSpin { to { transform: rotate(360deg); } }
+.icon-orbit {
+  position: absolute;
+  inset: -6px;
+  border-radius: 18px;
+  pointer-events: none;
+}
+.icon-orbit:before, .icon-orbit:after {
+  content: "";
+  position: absolute;
+  top: 50%; left: 50%;
+  width: 4px; height: 4px;
+  background: radial-gradient(circle at center, #fff, rgba(255,255,255,0));
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  box-shadow: 0 0 8px 2px rgba(255,255,255,0.6);
+}
+.icon-orbit:before { animation: orbitSpin 9s linear infinite; transform-origin: -28px 0; }
+.icon-orbit:after { animation: orbitSpin 14s linear infinite reverse; transform-origin: 32px 0; opacity: .7; }
+.group:hover .icon-orbit:before { animation-duration: 5s; }
+.group:hover .icon-orbit:after { animation-duration: 8s; }
+@media (prefers-reduced-motion: reduce) { .icon-orbit:before, .icon-orbit:after { animation: none; } }
+
+/* ================= Ambient Pulsing Glows ================= */
+@keyframes glowPulse {
+  0% { opacity: 0.0; transform: scale(0.85) translate3d(0,0,0); }
+  18% { opacity: 0.75; }
+  38% { opacity: 0.32; transform: scale(1.07) translate3d(14px,-10px,0); }
+  60% { opacity: 0.68; }
+  82% { opacity: 0.20; transform: scale(0.95) translate3d(-4px,4px,0); }
+  100% { opacity: 0; }
+}
+@keyframes glowDrift { from { transform: translate3d(0,0,0); } to { transform: translate3d(20px,-24px,0); } }
+.ambient-glows { mix-blend-mode: plus-lighter; }
+.ambient-glow {
+  position: absolute;
+  border-radius: 9999px;
+  opacity: 0;
+  animation: glowPulse 22s cubic-bezier(.6,.2,.4,.8) infinite;
+}
+/* Slight random extra movement using nth-child to offset */
+.ambient-glow:nth-child(odd) { animation-duration: 26s; }
+.ambient-glow:nth-child(3n) { animation-duration: 30s; }
+@media (prefers-reduced-motion: reduce) { .ambient-glow { animation: none; opacity: 0.18; } }
+
+/* ================= Aurora + Dark Veil Effects (Below Hero) ================= */
+@keyframes auroraDrift {
+  0% { transform: translate3d(-12%, -8%,0) rotate(0deg) scale(1); }
+  33% { transform: translate3d(8%, -4%,0) rotate(25deg) scale(1.15); }
+  66% { transform: translate3d(-6%, 6%,0) rotate(55deg) scale(1.05); }
+  100% { transform: translate3d(-12%, -8%,0) rotate(0deg) scale(1); }
+}
+@keyframes auroraShift {
+  0% { transform: translate3d(10%, 4%,0) rotate(0deg) scale(1.1); }
+  50% { transform: translate3d(-6%, -6%,0) rotate(-35deg) scale(1); }
+  100% { transform: translate3d(10%, 4%,0) rotate(0deg) scale(1.1); }
+}
+@keyframes auroraPulse { 0%,100% { opacity:.35;} 50% { opacity:.65;} }
+
+.aurora-layer { mix-blend-mode: plus-lighter; }
+/* Simplified Aurora (performance friendly & visible over black) */
+@keyframes auroraFloatA { 0% { transform: translate3d(-4%, -2%,0) scale(1); } 50% { transform: translate3d(3%, 4%,0) scale(1.06);} 100% { transform: translate3d(-4%, -2%,0) scale(1);} }
+@keyframes auroraFloatB { 0% { transform: translate3d(3%, 3%,0) scale(1.05); } 50% { transform: translate3d(-5%, -4%,0) scale(1);} 100% { transform: translate3d(3%, 3%,0) scale(1.05);} }
+@keyframes auroraFadeShift { 0%,100% { opacity:.55;} 50% { opacity:.75;} }
+
+.with-section-atmosphere .aurora-field {
+  position:absolute; inset:0; pointer-events:none; z-index:0;
+  background:
+    radial-gradient(circle at 18% 30%, rgba(109,40,217,0.55), rgba(0,0,0,0) 55%),
+    radial-gradient(circle at 78% 55%, rgba(59,130,246,0.45), rgba(0,0,0,0) 60%),
+    radial-gradient(circle at 42% 82%, rgba(168,85,247,0.38), rgba(0,0,0,0) 65%);
+  filter: saturate(120%);
+  opacity:.35;
+}
+.with-section-atmosphere .aurora-field:before,
+.with-section-atmosphere .aurora-field:after {
+  content:""; position:absolute; inset:0; pointer-events:none;
+  background:
+    radial-gradient(circle at 70% 25%, rgba(120,200,255,0.35), rgba(0,0,0,0) 60%),
+    radial-gradient(circle at 30% 75%, rgba(147,51,234,0.28), rgba(0,0,0,0) 65%),
+    radial-gradient(circle at 85% 88%, rgba(168,85,247,0.30), rgba(0,0,0,0) 62%),
+    radial-gradient(circle at 15% 90%, rgba(59,130,246,0.26), rgba(0,0,0,0) 58%);
+  mix-blend-mode:screen;
+  animation: auroraFloatA 38s ease-in-out infinite, auroraFadeShift 26s ease-in-out infinite;
+  opacity:.30;
+}
+.with-section-atmosphere .aurora-field:after {
+  animation: auroraFloatB 52s ease-in-out infinite reverse, auroraFadeShift 34s ease-in-out infinite;
+  opacity:.25;
+  background:
+    radial-gradient(circle at 50% 85%, rgba(109,40,217,0.28), rgba(0,0,0,0) 65%),
+    radial-gradient(circle at 65% 95%, rgba(120,200,255,0.24), rgba(0,0,0,0) 60%),
+    radial-gradient(circle at 35% 92%, rgba(168,85,247,0.26), rgba(0,0,0,0) 62%);
+}
+
+/* Commented legacy heavier aurora blur layers (kept for reference)
+.with-section-atmosphere .aurora-blur { }
+*/
+
+/* Dark veil adds subtle noise + vignette so aurora remains soft */
+/* Dark veil (subtle vignette + noise) only under .with-section-atmosphere */
+.with-section-atmosphere .dark-veil {
+  position:absolute; inset:0; pointer-events:none; z-index:1;
+  background:
+    radial-gradient(circle at 50% 120%, rgba(0,0,0,0.85), rgba(0,0,0,0) 60%),
+    linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.65) 140%);
+  mask-image: linear-gradient(to bottom, transparent 0%, black 10%, black 100%);
+  opacity:.95;
+}
+
+/* Extra darkening overlay to ensure perceived black background */
+.with-section-atmosphere .black-overlay { position:absolute; inset:0; background:rgba(0,0,0,0.6); z-index:2; }
+@media (prefers-reduced-motion: reduce) { .with-section-atmosphere .aurora-field:before, .with-section-atmosphere .aurora-field:after { animation:none; } }
+
+/* Disable motion for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .aurora-blur { animation: none; }
+}
+
+
+/* ================= Benefits Section Animations ================= */
+.benefit-card { opacity: 0; transform: translateY(18px); }
+.benefit-card.benefit-visible { opacity: 1; transform: translateY(0); }
+@keyframes benefitItem { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
+@media (prefers-reduced-motion: reduce) {
+  .benefit-card { opacity:1 !important; transform:none !important; }
+  [class*="benefitItem_"] { animation: none !important; opacity:1 !important; transform:none !important; }
+}
+
+@layer components {
+  /* Unified dark section background subtle gradient */
+  .section-panel-bg {
+    position: relative;
+    background:
+      radial-gradient(circle at 20% 15%, rgba(120,120,140,0.05), transparent 55%),
+      radial-gradient(circle at 80% 85%, rgba(120,120,140,0.04), transparent 60%),
+      linear-gradient(to bottom, #050506, #050507 40%, #040406 70%, #030304 100%);
+  }
+  .section-panel-bg:before { /* soft top fade seam */
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:linear-gradient(to top, rgba(0,0,0,0) 0%, rgba(0,0,0,0.6) 100%);
+    opacity:.55;
+  }
+  /* Card glow: subtle white halo and faint white border for dark theme */
+  .card-glow {
+    /* stronger white halo to outline black cards on black background */
+    /* Outer white glow, plus a faint inner shadow to keep the card visually distinct */
+    box-shadow:
+      0 0 40px -6px rgba(255,255,255,0.10), /* soft outer */
+      0 0 4px 1px rgba(255,255,255,0.06),   /* tight edge light */
+      0 14px 48px rgba(0,0,0,0.65) inset;   /* inner depth */
+    border: 1px solid rgba(255,255,255,0.14) !important;
+    /* Force card to pure black (override any bg utilities) */
+    background-color: hsl(0 0% 0%) !important;
+    color: hsl(0 0% 100%) !important;
+    /* Add slight rounded white halo using outline to help visibility on very dark screens */
+    outline: 1px solid rgba(255,255,255,0.03);
+    position: relative;
+  }
+  .card-glow:before {
+    content:""; position:absolute; inset:-1px; border-radius:inherit; pointer-events:none;
+    background:radial-gradient(circle at 30% 25%, rgba(255,255,255,0.08), rgba(255,255,255,0) 60%),
+              radial-gradient(circle at 70% 75%, rgba(255,255,255,0.06), rgba(255,255,255,0) 65%);
+    opacity:.55; mix-blend-mode:screen; transition:opacity .5s ease, filter .6s ease;
+    filter:blur(18px);
+  }
+  .card-glow:hover:before { opacity:.9; filter:blur(26px); }
+  .card-glow:hover { box-shadow:
+      0 0 54px -4px rgba(255,255,255,0.18),
+      0 0 6px 1px rgba(255,255,255,0.08),
+      0 16px 54px rgba(0,0,0,0.7) inset;
+  }
+
+  /* Benefit panel perimeter glow */
+  .benefit-glow {
+    position: relative;
+    box-shadow:
+      0 0 34px -6px rgba(255,255,255,0.10),
+      0 0 4px 1px rgba(255,255,255,0.05);
+  }
+  .benefit-glow:before {
+    content:""; position:absolute; inset:-2px; border-radius:inherit; pointer-events:none;
+    background:radial-gradient(circle at 20% 25%, rgba(255,255,255,0.08), rgba(255,255,255,0) 60%),
+              radial-gradient(circle at 80% 70%, rgba(255,255,255,0.06), rgba(255,255,255,0) 65%);
+    filter:blur(18px); opacity:.45; mix-blend-mode:screen; transition:opacity .5s ease, filter .6s ease;
+  }
+  .benefit-glow:hover:before { opacity:.85; filter:blur(26px); }
+  .benefit-glow:hover { box-shadow:
+      0 0 50px -4px rgba(255,255,255,0.16),
+      0 0 6px 1px rgba(255,255,255,0.07);
+  }
+
+  /* Benefits section ambient light effect */
+  .benefits-backdrop { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+  .benefits-backdrop:before,
+  .benefits-backdrop:after {
+    content:""; position:absolute; inset:0; pointer-events:none; mix-blend-mode:screen; opacity:.55; transition:opacity .8s ease; }
+  /* Large soft gradients */
+  .benefits-backdrop:before { background:
+      radial-gradient(circle at 18% 28%, rgba(109,40,217,0.35), rgba(0,0,0,0) 60%),
+      radial-gradient(circle at 82% 32%, rgba(59,130,246,0.30), rgba(0,0,0,0) 62%),
+      radial-gradient(circle at 50% 95%, rgba(147,51,234,0.22), rgba(0,0,0,0) 70%);
+    filter:blur(120px) saturate(130%);
+  }
+  /* Subtle moving shimmer */
+  @keyframes benefitsDrift { 0% { transform:translate3d(-3%, -2%,0) scale(1);} 50% { transform:translate3d(4%,3%,0) scale(1.05);} 100% { transform:translate3d(-3%, -2%,0) scale(1);} }
+  .benefits-backdrop:after { background:
+      radial-gradient(circle at 65% 70%, rgba(168,85,247,0.28), rgba(0,0,0,0) 65%),
+      radial-gradient(circle at 35% 75%, rgba(255,255,255,0.10), rgba(0,0,0,0) 60%);
+    filter:blur(140px) saturate(140%);
+    animation: benefitsDrift 46s ease-in-out infinite;
+    opacity:.45;
+  }
+  @media (prefers-reduced-motion: reduce) { .benefits-backdrop:after { animation:none; } }
+  /* Darken base so text stays readable */
+  .benefits-backdrop-overlay { position:absolute; inset:0; background:linear-gradient(to bottom,rgba(0,0,0,0.75),rgba(0,0,0,0.85)); pointer-events:none; }
+
+  /* Bento grid layout (7 items example) */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-auto-rows: 12rem;
+  }
+
+  /* Place items to create a bento layout - adjust spans as needed */
+  .bento-1 { grid-column: 1 / span 5; grid-row: 1 / span 2; }
+  .bento-2 { grid-column: 6 / span 4; grid-row: 1 / span 1; }
+  .bento-3 { grid-column: 10 / span 3; grid-row: 1 / span 2; }
+  .bento-4 { grid-column: 6 / span 4; grid-row: 2 / span 1; }
+  .bento-5 { grid-column: 1 / span 4; grid-row: 3 / span 1; }
+  .bento-6 { grid-column: 5 / span 4; grid-row: 3 / span 1; }
+  .bento-7 { grid-column: 9 / span 4; grid-row: 3 / span 1; }
+
+  .bento-item {
+    position: relative;
+    overflow: hidden;
+    border-radius: 0.75rem;
+    transition: transform 220ms ease, box-shadow 220ms ease;
+    cursor: pointer;
+    background: #000;
+  }
+
+  .bento-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transform-origin: center center;
+    transition: transform 220ms ease;
+  }
+
+  .bento-caption {
+    position: absolute;
+    left: 1rem;
+    bottom: 1rem;
+    color: white;
+    font-weight: 700;
+    text-shadow: 0 6px 18px rgba(0,0,0,0.6);
+  }
+
+  /* Hover pop-up: scale & elevated shadow */
+  .bento-item:hover {
+    transform: translateY(-10px) scale(1.03);
+    z-index: 20;
+    box-shadow: 0 24px 48px rgba(0,0,0,0.6), 0 6px 30px rgba(0,0,0,0.5);
+  }
+
+  .bento-item:hover .bento-img {
+    transform: scale(1.06);
+  }
+
+  /* Bento grid layout and hover pop-up */
+  .bento-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    grid-auto-rows: 220px; /* taller rows for bigger images */
+    gap: 18px;
+    align-items: stretch;
+    width: 100%;
+    padding: 0 1rem;
+  }
+
+  /* Define tile spans to create a bento layout (mix of big and small tiles)
+     tile-1..tile-7 map to positions to form a pleasing grid */
+  .bento-item { position: relative; overflow: hidden; border-radius: 12px; }
+  .bento-img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 240ms ease, box-shadow 240ms ease; }
+  .bento-label { position: absolute; left: 18px; bottom: 18px; color: white; font-weight: 700; font-size: 1.125rem; text-shadow: 0 4px 14px rgba(0,0,0,0.6); }
+
+  /* Hover pop-up */
+  .bento-item:hover { z-index: 30; transform: translateY(-8px); }
+  .bento-item:hover .bento-img { transform: scale(1.06); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+
+  /* Layout for the 7-image bento (desktop) */
+  /* Adjusted tile spans to avoid overlapping tiles (tile-2 no longer spans 3 rows) */
+  .tile-1 { grid-column: 1 / span 2; grid-row: 1 / span 2; }
+  .tile-2 { grid-column: 3 / span 2; grid-row: 1 / span 2; }
+  .tile-3 { grid-column: 5 / span 2; grid-row: 1 / span 1; }
+  .tile-4 { grid-column: 1 / span 1; grid-row: 3 / span 2; }
+  .tile-5 { grid-column: 2 / span 2; grid-row: 3 / span 2; }
+  .tile-6 { grid-column: 4 / span 2; grid-row: 3 / span 2; }
+  .tile-7 { grid-column: 6 / span 1; grid-row: 2 / span 2; }
+
+  /* Responsive adjustments */
+  @media (max-width: 1024px) {
+    .bento-grid { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 160px; }
+    .tile-1 { grid-column: 1 / span 3; grid-row: auto; }
+    .tile-2 { grid-column: 1 / span 2; }
+    .tile-3, .tile-4, .tile-5, .tile-6, .tile-7 { grid-column: auto; }
+  }
+
+  @media (max-width: 640px) {
+    .bento-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 140px; }
+    .tile-1, .tile-2, .tile-3, .tile-4, .tile-5, .tile-6, .tile-7 { grid-column: auto; }
+  }
+
+  /* Fullscreen overlay preview shown when hovering a tile */
+  .bento-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+  }
+
+  .bento-overlay img {
+    max-width: 92vw;
+    max-height: 92vh;
+    object-fit: contain;
+    border-radius: 12px;
+    box-shadow: 0 40px 80px rgba(0,0,0,0.7);
+  }
+
+  /* ================= Glass Card Utility ================= */
+  .glass-card {
+    position: relative;
+    background: linear-gradient(135deg, rgba(40,40,48,0.55), rgba(15,15,20,0.45));
+    backdrop-filter: blur(18px) saturate(150%);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow:
+      0 4px 24px -4px rgba(0,0,0,0.65),
+      0 1px 0 0 rgba(255,255,255,0.04) inset,
+      0 0 0 1px rgba(255,255,255,0.04);
+    overflow: hidden;
+  }
+  .glass-card:before,
+  .glass-card:after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: .55;
+  }
+  .glass-card:before { /* subtle top sheen */
+    background: linear-gradient(160deg, rgba(255,255,255,0.18), rgba(255,255,255,0.04) 38%, transparent 65%);
+    mix-blend-mode: overlay;
+  }
+  .glass-card:after { /* faint focal glow */
+    background: radial-gradient(circle at 85% 18%, rgba(255,255,255,0.09), transparent 60%);
+    opacity: .4;
+  }
+  .glass-card:hover {
+    border-color: rgba(255,255,255,0.14);
+    box-shadow:
+      0 10px 40px -10px rgba(0,0,0,0.75),
+      0 0 0 1px rgba(255,255,255,0.08),
+      0 1px 0 0 rgba(255,255,255,0.06) inset;
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    .glass-card { backdrop-filter: none; -webkit-backdrop-filter: none; background: #111; }
+    .glass-card:before, .glass-card:after { display: none; }
+  }
+}
+
+/* Custom bento layout overrides to match the reference mosaic
+   This block intentionally comes after the earlier definitions and uses
+   explicit grid spans so the 7-image gallery arranges predictably.
+*/
+
+.bento-grid {
+  display: grid !important;
+  grid-template-columns: repeat(12, minmax(0,1fr)) !important;
+  grid-auto-rows: 16rem !important; /* taller rows for the mosaic look */
+  gap: 18px !important;
+  width: 100%;
+  padding: 0 1rem;
+  align-items: stretch;
+  /* Prevent transformed tiles from visually overlapping other grid cells by clipping
+     any overflow from scaled/transformed children. This keeps hover popups constrained
+     to the gallery area. */
+  overflow: hidden;
+}
+
+/* Mosaic tile mapping (desktop) for 8 images. Balanced 3-row layout, no overlaps. */
+/* Row heights: auto from grid-auto-rows (16rem). */
+/* Row 1: large feature (tile-1), two mediums (tile-2, tile-3), vertical accent (tile-4) */
+.tile-1 { grid-column: 1 / span 5 !important; grid-row: 1 / span 2 !important; }
+.tile-2 { grid-column: 6 / span 3 !important; grid-row: 1 / span 1 !important; }
+.tile-3 { grid-column: 9 / span 4 !important; grid-row: 1 / span 1 !important; }
+.tile-4 { grid-column: 6 / span 3 !important; grid-row: 2 / span 2 !important; }
+/* Row 2/3 mix: supportive wides (tile-5, tile-6) and two stacked (tile-7, tile-8) on right */
+.tile-5 { grid-column: 1 / span 3 !important; grid-row: 3 / span 1 !important; }
+.tile-6 { grid-column: 4 / span 2 !important; grid-row: 3 / span 1 !important; }
+.tile-7 { grid-column: 9 / span 2 !important; grid-row: 2 / span 2 !important; }
+.tile-8 { grid-column: 11 / span 2 !important; grid-row: 2 / span 2 !important; }
+
+/* Hover/active behavior keep tiles expanding in-place */
+.bento-item { transition: transform 220ms cubic-bezier(.2,.8,.2,1), box-shadow 220ms ease; }
+/* Slightly reduced global hover/active scale to limit overlapping */
+.bento-item.active, .bento-item:hover { transform: translateY(-6px) scale(1.03); z-index: 40; }
+.bento-item.active .bento-img, .bento-item:hover .bento-img { transform: scale(1.05); }
+
+/* Special-case modest expansions for tiles near tight neighbors */
+.tile-4.active, .tile-4:hover,
+.tile-6.active, .tile-6:hover,
+.tile-7.active, .tile-7:hover,
+.tile-8.active, .tile-8:hover {
+  transform-origin: center;
+  transform: translateY(-4px) scale(1.02);
+  z-index: 38;
+}
+.tile-4.active .bento-img, .tile-4:hover .bento-img,
+.tile-6.active .bento-img, .tile-6:hover .bento-img,
+.tile-7.active .bento-img, .tile-7:hover .bento-img,
+.tile-8.active .bento-img, .tile-8:hover .bento-img { transform: scale(1.035); }
+
+/* Responsive: stack into 3 columns then 2 columns for smaller screens */
+@media (max-width: 1024px) {
+  .bento-grid { grid-template-columns: repeat(6, minmax(0,1fr)); grid-auto-rows: 12rem; }
+  /* Collapse into 6 columns: first 4 tiles flow first, remaining stacked */
+  .tile-1 { grid-column: 1 / span 4 !important; grid-row: 1 / span 2 !important; }
+  .tile-2 { grid-column: 5 / span 2 !important; grid-row: 1 / span 1 !important; }
+  .tile-3 { grid-column: 5 / span 2 !important; grid-row: 2 / span 1 !important; }
+  .tile-4 { grid-column: 1 / span 3 !important; grid-row: 3 / span 2 !important; }
+  .tile-5, .tile-6, .tile-7, .tile-8 { grid-column: auto !important; grid-row: auto !important; }
+}
+
+@media (max-width: 640px) {
+  .bento-grid { grid-template-columns: repeat(2, minmax(0,1fr)); grid-auto-rows: 12rem; }
+  .tile-1, .tile-2, .tile-3, .tile-4, .tile-5, .tile-6, .tile-7, .tile-8 { grid-column: auto !important; grid-row: auto !important; }
+}
+
+/* ================= Accessibility Enhancements ================= */
+
+/* Screen Reader Only Text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Skip to Main Content Link */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #3b82f6;
+  color: #fff;
+  padding: 8px 16px;
+  z-index: 9999;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 0 0 4px 0;
+  transition: top 0.3s ease;
+}
+
+.skip-link:focus {
+  top: 0;
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Focus Indicators - Visible and Accessible */
+*:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(59, 130, 246, 0.2);
+}
+
+/* High contrast focus for dark backgrounds */
+.dark *:focus-visible,
+[data-theme="dark"] *:focus-visible {
+  outline-color: #60a5fa;
+  box-shadow: 0 0 0 6px rgba(96, 165, 250, 0.3);
+}
+
+/* Keyboard Navigation Helper - Tab Indicator */
+body:not(.using-mouse) *:focus {
+  outline: 3px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Reduced Motion Preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable all aurora/glow animations */
+  .aurora-field,
+  .aurora-field:before,
+  .aurora-field:after,
+  .ambient-glow,
+  .benefits-backdrop:after,
+  .icon-orbit:before,
+  .icon-orbit:after {
+    animation: none !important;
+  }
+}
+
+/* High Contrast Mode Support */
+@media (prefers-contrast: high) {
+  :root {
+    --color-text: #000;
+    --color-background: #fff;
+    --color-border: #000;
+    --foreground: 0 0% 0%;
+    --background: 0 0% 100%;
+  }
+  
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    border: 2px solid currentColor !important;
+  }
+  
+  *:focus-visible {
+    outline: 4px solid #000 !important;
+    outline-offset: 3px !important;
+  }
+}
+
+/* Minimum Touch Target Size (44x44px WCAG requirement) */
+button,
+a,
+input[type="checkbox"],
+input[type="radio"],
+input[type="button"],
+input[type="submit"] {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Ensure text can be resized */
+html {
+  font-size: 16px;
+}
+
+@media (max-width: 640px) {
+  html {
+    font-size: 14px;
+  }
+}
+
+/* Keyboard-only style (hide focus outline for mouse users) */
+.js-focus-visible :focus:not(.focus-visible) {
+  outline: none;
+}
+
+/* Loading/Disabled State Styles */
+[aria-busy="true"],
+[aria-disabled="true"],
+[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Error States with Icons (not just color) */
+[aria-invalid="true"],
+.error {
+  border-color: #dc2626 !important;
+}
+
+[aria-invalid="true"]::before,
+.error::before {
+  content: "⚠ ";
+  color: #dc2626;
+}
+
+/* Success States */
+[aria-valid="true"],
+.success {
+  border-color: #16a34a !important;
+}
+
+[aria-valid="true"]::before,
+.success::before {
+  content: "✓ ";
+  color: #16a34a;
+}
+
+/* Improved Color Contrast */
+.text-muted {
+  color: hsl(0 0% 60%) !important; /* Ensures 4.5:1 contrast on black */
+}
+
+.text-secondary {
+  color: hsl(0 0% 75%) !important; /* Ensures good contrast */
+}
+
+/* Ensure links are understandable without color alone */
+a:not(.button):not(.nav-link) {
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+a:not(.button):not(.nav-link):hover {
+  text-decoration-thickness: 2px;
+}
+
+/* Navigation links should have no underline */
+.nav-link {
+  text-decoration: none !important;
+}
+.nav-link:hover {
+  text-decoration: none !important;
+}
+
+/* Remove blue focus outline/box specifically for navigation links (keeps rest of site accessible) */
+.nav-link:focus,
+.nav-link:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Keyboard Shortcuts Indicator */
+kbd {
+  display: inline-block;
+  padding: 3px 8px;
+  font-family: ui-monospace, monospace;
+  font-size: 0.875em;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  color: inherit;
+}
+
+/* Tour Spotlight Effect Enhancement */
+.tour-highlight {
+  position: relative;
+  z-index: 9998 !important;
+  animation: tour-pulse 2s ease-in-out infinite;
+}
+
+@keyframes tour-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7),
+                0 0 20px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 20px rgba(59, 130, 246, 0),
+                0 0 30px rgba(59, 130, 246, 0.3);
+  }
+}
+
+.tour-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  z-index: 9997;
+  pointer-events: all;
+}
+
+/* Accessible Modal/Dialog Styles */
+[role="dialog"],
+[role="alertdialog"] {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10000;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+}
+
+/* Ensure form labels are clearly associated */
+label {
+  cursor: pointer;
+  font-weight: 500;
+}
+
+label[for] {
+  user-select: none;
+}
+
+/* Required Field Indicator */
+[required] + label::after,
+label:has(+ [required])::after {
+  content: " *";
+  color: #dc2626;
+  font-weight: 700;
+}
+
+/* Accessible Tables */
+th {
+  font-weight: 700;
+  text-align: left;
+}
+
+caption {
+  font-weight: 700;
+  text-align: left;
+  margin-bottom: 0.5rem;
+}
+
+/* Print Styles for Accessibility */
+@media print {
+  .skip-link,
+  nav,
+  .sidebar,
+  [aria-hidden="true"] {
+    display: none !important;
+  }
+  
+  a::after {
+    content: " (" attr(href) ")";
+  }
+  
+  abbr[title]::after {
+    content: " (" attr(title) ")";
+  }
+}
+
