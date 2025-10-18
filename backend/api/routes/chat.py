@@ -12,7 +12,7 @@ import logging
 from backend.api.services.rag_service import KnowledgeGraphRAG
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/chat", tags=["chat"])
+router = APIRouter(prefix="/api/chat", tags=["chat"])
 
 # Initialize RAG service (singleton)
 rag_service = None

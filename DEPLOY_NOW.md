@@ -58,7 +58,7 @@ Key: NEO4J_USER
 Value: neo4j
 
 Key: NEO4J_PASSWORD
-Value: 45dI3adqPMn9s3p7OIwX1OpUc6nFk1q8ZKbvrZIILqk
+Value: your-neo4j-password
 
 Key: NEO4J_DATABASE
 Value: neo4j

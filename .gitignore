@@ -1,10 +1,17 @@
 ﻿# Environment files
 .env
 .env.local
+.env.development
 .env.production
 backend/.env
 backend/.env.local
 backend/.env.production
+frontend/.env
+frontend/.env.local
+frontend/.env.production
+frontend/new frontend/.env
+frontend/new frontend/.env.local
+frontend/new frontend/.env.production
 
 # Python
 __pycache__/
@@ -13,8 +20,15 @@ __pycache__/
 *.so
 .Python
 venv/
+.venv/
 ENV/
 env/
+*.egg-info/
+*.egg
+*.manifest
+*.spec
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Node
 node_modules/
@@ -23,8 +37,16 @@ yarn-debug.log*
 yarn-error.log*
 dist/
 build/
+*.tsbuildinfo
+.turbo/
+.next/
+out/
+
+# Editors / OS
 .vscode/
+.idea/
 .DS_Store
+Thumbs.db
 
 # Neo4j
 .neo4j/
@@ -34,3 +56,15 @@ neo4j/
 # Logs
 *.log
 logs/
+
+# Coverage
+coverage/
+.coverage*
+htmlcov/
+
+# Temp files
+*.tmp
+*.bak
+~$*
+*.swp
+*.swo

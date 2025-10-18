@@ -7,7 +7,7 @@ Write-Host "=" * 50
 # YOU NEED TO FILL THESE:
 $GITHUB_USERNAME = "NimaFathima"
 $NEO4J_AURA_URI = "neo4j+s://d3ff59a7.databases.neo4j.io"
-$NEO4J_AURA_PASSWORD = "45dI3adqPMn9s3p7OIwX1OpUc6nFk1q8ZKbvrZIILqk"
+$NEO4J_AURA_PASSWORD = "<set-your-neo4j-password>"
 
 Write-Host "`n📝 Configuration Check:" -ForegroundColor Cyan
 Write-Host "  GitHub: $GITHUB_USERNAME"

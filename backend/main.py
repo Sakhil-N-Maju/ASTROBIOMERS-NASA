@@ -1,28 +1,45 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-import logging
+import logging, signal
+import sys
+from pathlib import Path
+from dotenv import load_dotenv
+
+# Load environment variables FIRST before any other imports
+load_dotenv()
+
+# Add backend directory to Python path
+backend_dir = Path(__file__).parent
+if str(backend_dir) not in sys.path:
+    sys.path.insert(0, str(backend_dir))
 
 # Import API routes
 from api.routes import knowledge_graph
+from api.routes import trends
+from api.routes import chat
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+def _install_signal_handlers():
+    def _h(sig, frame):
+        logger.warning(f"Received signal {sig}; waiting for graceful shutdown.")
+    for s in (getattr(signal, 'SIGINT', None), getattr(signal, 'SIGTERM', None)):
+        if s:
+            try:
+                signal.signal(s, _h)
+            except Exception:
+                pass
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan events for startup and shutdown"""
-    # Startup
     logger.info("🚀 Starting Space Biology Knowledge Engine API...")
     logger.info("Connecting to databases...")
-    # TODO: Initialize database connections
-    # TODO: Load NLP models
-    # TODO: Initialize vector database
+    _install_signal_handlers()
     yield
-    # Shutdown
     logger.info("Shutting down API...")
-    # TODO: Close database connections
 
 app = FastAPI(
     title="Space Biology Knowledge Engine API",
@@ -75,6 +92,8 @@ async def health_check():
 
 # Include routers
 app.include_router(knowledge_graph.router)
+app.include_router(trends.router)
+app.include_router(chat.router)
 
 # TODO: Import and include additional routers
 # from api import auth, search, graph, ai, user

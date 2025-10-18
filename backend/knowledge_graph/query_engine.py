@@ -33,19 +33,48 @@ class QueryEngine:
         self.user = os.getenv("NEO4J_USER", "neo4j")
         self.password = os.getenv("NEO4J_PASSWORD", "spacebiology123")
         self.database = os.getenv("NEO4J_DATABASE", "astrobiomers")
-        
-        try:
-            self.driver = GraphDatabase.driver(
-                self.uri,
-                auth=(self.user, self.password)
-            )
-            # Test connection
-            with self.driver.session(database=self.database) as session:
-                session.run("RETURN 1")
-            logger.info(f"✅ Connected to Neo4j at {self.uri}, database: {self.database}")
-        except Exception as e:
-            logger.error(f"❌ Failed to connect to Neo4j: {e}")
-            raise
+        logger.info(
+            "[QueryEngine] Initializing Neo4j driver uri=%s user=%s db=%s password_len=%s",
+            self.uri, self.user, self.database, len(self.password) if self.password else 0
+        )
+
+        # Build candidate URIs to try (in order) if the primary fails.
+        # This helps when routing (neo4j+s) is blocked or TLS variants differ.
+        candidates = [self.uri]
+        if self.uri.startswith("neo4j+s://"):
+            host = self.uri.replace("neo4j+s://", "")
+            # Avoid duplicates while preserving order.
+            for variant in [
+                f"bolt+s://{host}",   # direct, encrypted
+                f"neo4j://{host}",    # routing (let driver decide encryption)
+                f"bolt://{host}",     # direct, opportunistic encryption / local dev
+                f"neo4j+ssc://{host}",# routing, self-signed cert relax
+                f"bolt+ssc://{host}"  # direct, self-signed cert relax
+            ]:
+                if variant not in candidates:
+                    candidates.append(variant)
+
+        last_err: Optional[Exception] = None
+        for attempt, uri in enumerate(candidates, start=1):
+            logger.info("[QueryEngine] Attempt %d/%d connecting to %s", attempt, len(candidates), uri)
+            try:
+                drv = GraphDatabase.driver(uri, auth=(self.user, self.password))
+                with drv.session(database=self.database) as session:
+                    session.run("RETURN 1")
+                # Success
+                self.driver = drv
+                self.uri = uri
+                logger.info("✅ Connected to Neo4j at %s (db=%s) after %d attempt(s)", uri, self.database, attempt)
+                break
+            except Exception as e:  # capture and continue
+                last_err = e
+                logger.warning("[QueryEngine] Attempt %d failed for %s: %s", attempt, uri, type(e).__name__)
+                logger.debug("[QueryEngine] Full error", exc_info=True)
+        else:  # no break
+            logger.error("❌ All connection attempts failed (%d variants tried)", len(candidates))
+            if last_err:
+                raise last_err
+            raise RuntimeError("Neo4j connection attempts failed without exception captured")
     
     def execute_query(self, query: str, parameters: Optional[Dict[str, Any]] = None) -> List[Dict[str, Any]]:
         """

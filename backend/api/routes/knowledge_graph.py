@@ -7,7 +7,7 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel
 from knowledge_graph.query_engine import QueryEngine
-import logging
+import logging, os
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api", tags=["knowledge-graph"])
@@ -245,13 +245,83 @@ class SearchResult(BaseModel):
     relevance: float
 
 
+def _sample_graph_data(query: str):
+    """Return a small static graph for mock/offline mode."""
+    root_id = f"entity:{query.lower()}"
+    nodes = [
+        {"id": root_id, "label": query.title(), "type": "entity", "group": 1},
+        {"id": "paper:123456", "label": f"{query.title()} Effects in Microgravity", "type": "paper", "group": 2, "title": f"{query.title()} Effects in Microgravity", "paperId": "123456"},
+        {"id": "entity:microgravity", "label": "Microgravity", "type": "entity", "group": 1},
+        {"id": "entity:bone-loss", "label": "Bone Loss", "type": "entity", "group": 1},
+    ]
+    links = [
+        {"source": root_id, "target": "paper:123456", "type": "MENTIONED_IN", "value": 1},
+        {"source": "paper:123456", "target": "entity:microgravity", "type": "ASSOCIATED_WITH", "value": 1},
+        {"source": "paper:123456", "target": "entity:bone-loss", "type": "ASSOCIATED_WITH", "value": 1},
+    ]
+    return {
+        "nodes": nodes,
+        "links": links
+    }
+
+
+@router.get("/neo4j-status")
+async def neo4j_status():
+    """Lightweight diagnostic endpoint to confirm Neo4j connectivity and basic stats.
+
+    NOTE: Remove or protect this endpoint in production; it's purely for local debugging.
+    """
+    try:
+        qe = get_query_engine()
+        stats = {}
+        def first_count(cq: str):
+            try:
+                r = qe.execute_query(cq)
+                return r[0]['count'] if r else 0
+            except Exception:
+                return None
+        stats['papers'] = first_count("MATCH (n:Paper) RETURN count(n) as count")
+        stats['relationships'] = first_count("MATCH ()-[r]->() RETURN count(r) as count")
+        stats['nodes_total'] = first_count("MATCH (n) RETURN count(n) as count")
+        return {"status":"ok","neo4j_uri":get_query_engine().uri,"database":get_query_engine().database,"stats":stats}
+    except Exception as e:
+        logger.error(f"Neo4j status check failed: {e}")
+        return {"status":"error","detail":str(e)}
+
+
+@router.get("/graph-stats")
+async def graph_stats():
+    """Fast aggregate counts for UI dashboards."""
+    try:
+        qe = get_query_engine()
+        cypher = """
+        CALL { MATCH (p:Paper) RETURN count(p) AS papers }
+        CALL { MATCH ()-[r]->() RETURN count(r) AS relationships }
+        CALL { MATCH (n) RETURN count(n) AS nodes }
+        RETURN papers, relationships, nodes
+        """
+        res = qe.execute_query(cypher)
+        return res[0] if res else {"papers":0,"relationships":0,"nodes":0}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @router.get("/knowledge-graph")
-async def get_knowledge_graph(q: str = Query(..., min_length=1)):
+async def get_knowledge_graph(
+    q: str = Query(..., min_length=1),
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0)
+):
     """
     Get knowledge graph for a search query
     Returns nodes and edges for visualization
     """
     try:
+        kg_mock = os.getenv("KG_MOCK") == "1"
+        logger.info(f"[KG] Incoming query='{q}' mock={kg_mock}")
+        if kg_mock:
+            logger.info("[KG] Returning mock graph (KG_MOCK=1)")
+            return _sample_graph_data(q)
+
         qe = get_query_engine()
         
         # Search for entities and papers matching the query
@@ -272,7 +342,8 @@ async def get_knowledge_graph(q: str = Query(..., min_length=1)):
             END as nodeKey,
             n
         ORDER BY nodeKey
-        LIMIT 50
+        SKIP $offset
+        LIMIT $limit
         WITH collect({node: n, key: nodeKey}) as nodes
         UNWIND nodes as nodeData
         WITH nodeData.node as n, nodeData.key as nKey
@@ -283,8 +354,7 @@ async def get_knowledge_graph(q: str = Query(..., min_length=1)):
         )
         RETURN DISTINCT n, r, m, nKey
         """
-        
-        results = qe.execute_query(search_query, {"query": q})
+        results = qe.execute_query(search_query, {"query": q, "limit": limit, "offset": offset})
         
         # Build graph structure
         nodes_dict = {}
@@ -394,6 +464,54 @@ async def get_knowledge_graph(q: str = Query(..., min_length=1)):
     except Exception as e:
         logger.error(f"Error getting knowledge graph: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/kg-config")
+async def kg_config():
+    """Debug endpoint to inspect server-side KG configuration and (optionally) test Neo4j connectivity.
+    This should be removed or protected before production.
+    """
+    cfg = {
+        "KG_MOCK": os.getenv("KG_MOCK"),
+        "NEO4J_URI": os.getenv("NEO4J_URI"),
+        "NEO4J_USER": os.getenv("NEO4J_USER"),
+        "NEO4J_DATABASE": os.getenv("NEO4J_DATABASE"),
+    }
+    if os.getenv("KG_MOCK") != "1":
+        try:
+            qe = get_query_engine()
+            test = qe.execute_query("MATCH (n) RETURN count(n) as count LIMIT 1")
+            cfg["neo4j_connection"] = "ok"
+            cfg["node_count_sample"] = test[0]["count"] if test else 0
+        except Exception as e:
+            cfg["neo4j_connection"] = f"error: {e}" 
+    else:
+        cfg["neo4j_connection"] = "skipped (KG_MOCK=1)"
+    return cfg
+
+@router.get("/health-full")
+async def health_full():
+    """Deep health check: API + Neo4j counts. Not for production use without auth."""
+    payload = {"api": "ok"}
+    try:
+        qe = get_query_engine()
+        counts = {}
+        metrics = {
+            "papers": "MATCH (p:Paper) RETURN count(p) AS c",
+            "nodes": "MATCH (n) RETURN count(n) AS c",
+            "relationships": "MATCH ()-[r]->() RETURN count(r) AS c"
+        }
+        for label, cypher in metrics.items():
+            try:
+                r = qe.execute_query(cypher)
+                counts[label] = r[0]["c"] if r else 0
+            except Exception as inner:
+                counts[label] = f"error:{inner}"  # continue
+        payload["neo4j"] = "ok"
+        payload["counts"] = counts
+    except Exception as e:
+        payload["neo4j"] = f"error:{e}"
+    return payload
 
 
 @router.post("/search", response_model=List[SearchResult])

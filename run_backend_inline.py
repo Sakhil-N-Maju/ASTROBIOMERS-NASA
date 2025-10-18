@@ -1,0 +1,4 @@
+import sys, uvicorn
+sys.path.append('backend')
+import main  # noqa
+uvicorn.run(main.app, host='0.0.0.0', port=8000, log_level='info')

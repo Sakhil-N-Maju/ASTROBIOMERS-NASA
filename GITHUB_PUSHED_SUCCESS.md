@@ -21,7 +21,7 @@ Add these 4 variables:
 ```
 NEO4J_URI          → neo4j+s://d3ff59a7.databases.neo4j.io
 NEO4J_USER         → neo4j
-NEO4J_PASSWORD     → 45dI3adqPMn9s3p7OIwX1OpUc6nFk1q8ZKbvrZIILqk
+NEO4J_PASSWORD     → your-neo4j-password
 NEO4J_DATABASE     → neo4j
 ```
 

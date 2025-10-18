@@ -1,3 +1,122 @@
+from fastapi import APIRouter
+import os
+import datetime as dt
+import random
+
+router = APIRouter(prefix="/api/trends", tags=["trends"])
+
+MOCK = os.getenv("TRENDS_MOCK", "1").lower() in {"1", "true", "yes"}
+
+
+def _generate_sample_timeline(years: int = 10):
+    current_year = dt.datetime.utcnow().year
+    base = 40
+    data = []
+    for i in range(years):
+        year = current_year - (years - 1 - i)
+        # add some wave + random noise to simulate growth
+        papers = int(base + i * random.uniform(2.2, 5.0) + random.uniform(-5, 12))
+        data.append({"year": year, "papers": max(papers, 5)})
+    return data
+
+
+def _sample_topics():
+    names = [
+        "microgravity bone loss",
+        "stem cell differentiation",
+        "oxidative stress response",
+        "immune dysregulation",
+        "circadian rhythm",
+        "radiation dna repair",
+        "muscle atrophy",
+        "mitochondrial dynamics"
+    ]
+    topics = []
+    for n in names:
+        trend = round(random.uniform(-1.0, 1.2), 3)
+        status = "emerging" if trend > 0.45 else "declining" if trend < -0.45 else "stable"
+        topics.append({
+            "topic": n,
+            "trend": trend,
+            "status": status,
+            "total_papers": random.randint(15, 240)
+        })
+    return topics
+
+
+def _sample_authors():
+    authors = [
+        "Smith J.", "Garcia L.", "Kumar A.", "Chen W.",
+        "Lopez M.", "Yamamoto T.", "Ivanov P.", "Singh R."
+    ]
+    data = []
+    for a in authors:
+        papers = random.randint(5, 60)
+        data.append({
+            "name": a,
+            "papers": papers,
+            "citations": papers * random.randint(4, 25),
+            "h_index": random.randint(4, min(20, papers))
+        })
+    # sort by papers desc
+    return sorted(data, key=lambda x: x["papers"], reverse=True)
+
+
+def _sample_cooccurrence(topics):
+    pairs = []
+    for i in range(len(topics)):
+        for j in range(i + 1, len(topics)):
+            if random.random() < 0.35:  # sparse
+                pairs.append({
+                    "source": topics[i]["topic"],
+                    "target": topics[j]["topic"],
+                    "count": random.randint(3, 40)
+                })
+    return pairs
+
+
+@router.get("/summary")
+def trends_summary():
+    """Return aggregate trends dataset. In absence of real analytics this serves mock data."""
+    # In future: if not MOCK -> run actual analytic queries / cached computations
+    timeline = _generate_sample_timeline()
+    topics = _sample_topics()
+    authors = _sample_authors()
+    cooccurrence = _sample_cooccurrence(topics)
+    emerging = [t for t in topics if t["status"] == "emerging"]
+    declining = [t for t in topics if t["status"] == "declining"]
+    return {
+        "mock": True,
+        "generated_at": dt.datetime.utcnow().isoformat() + "Z",
+        "timeline": timeline,
+        "topics": topics,
+        "emergingTopics": emerging,
+        "decliningTopics": declining,
+        "topAuthors": authors[:6],
+        "cooccurrence": {"pairs": cooccurrence}
+    }
+
+
+@router.get("/publications")
+def publication_timeline():
+    return {"mock": True, "data": _generate_sample_timeline()}
+
+
+@router.get("/topics")
+def topics_trend():
+    topics = _sample_topics()
+    return {"mock": True, "topics": topics}
+
+
+@router.get("/authors")
+def authors_leaderboard():
+    return {"mock": True, "authors": _sample_authors()}
+
+
+@router.get("/cooccurrence")
+def cooccurrence_pairs():
+    topics = _sample_topics()
+    return {"mock": True, "pairs": _sample_cooccurrence(topics)}
 """
 Trends API Routes
 Provides endpoints for trend analysis, collaborations, and temporal patterns
@@ -17,7 +136,7 @@ from api.services.trend_analysis import TrendAnalysisService
 import logging
 
 logger = logging.getLogger(__name__)
-router = APIRouter(prefix="/api/trends", tags=["trends"])
+# router = APIRouter(prefix="/api/trends", tags=["trends"]) # REMOVED - duplicate definition
 
 # Initialize service
 trend_service = None
